@@ -26,11 +26,13 @@ class ModelFactory:
         model = Sequential(
             [
                 Input(shape=input_shape),
-                Conv2D(32, (3, 3), padding="same", activation="relu"),
+                Conv2D(128, (3, 3), padding="same", activation="relu"),
                 MaxPool2D((2, 2)),
+                BatchNormalization(),
                 Conv2D(64, (3, 3), padding="same", activation="relu"),
                 MaxPool2D((2, 2)),
-                Conv2D(128, (3, 3), padding="same", activation="relu"),
+                BatchNormalization(),
+                Conv2D(32, (3, 3), padding="same", activation="relu"),
                 GlobalAveragePooling2D(),
                 Dense(64, activation="relu"),
                 Dropout(0.2),
