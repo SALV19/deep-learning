@@ -1,4 +1,3 @@
-import os
 import numpy as np
 from pathlib import Path
 import librosa
@@ -10,7 +9,6 @@ output_dir = script_dir / "data" / "audio_batches"
 output_dir.mkdir(parents=True, exist_ok=True)
 
 # Load data
-# gztan = pd.read_pickle('data/gztan.pkl')
 audio_dir = script_dir / "music_dataset" / "gztan"
 
 # Process data to MFCC
@@ -80,7 +78,7 @@ def save_batch():
         output_path,
         mfcc=np.stack(mfcc_features),
         fft=np.stack(fft_features),
-        y=np.asarray(labels),
+        genre=np.asarray(labels),
         paths=np.asarray(paths)
     )
 
