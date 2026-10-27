@@ -97,7 +97,7 @@ train_ds = make_dataset(files_train)
 val_ds = make_dataset(files_val)
 test_ds = make_dataset(files_test)
 
-model = ModelFactory.compile_model(sample_shape, NUM_CLASSES)
+model = ModelFactory.compile_model(sample_shape, NUM_CLASSES, model_type="CNN_MODIFIED")
 model.summary()
 
 callbacks = [
