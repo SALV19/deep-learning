@@ -1,7 +1,8 @@
-import numpy as np
-from pathlib import Path
-import librosa
 import random
+from pathlib import Path
+
+import librosa
+import numpy as np
 
 script_dir = Path(__file__).resolve().parent
 
@@ -16,8 +17,8 @@ SR = 22050
 N_FFT = 2048
 N_MFCC = 13
 HOP_LENGTH = 512
-DURATION = 30                  # segundos
-N_SAMPLES = SR * DURATION      # 661500
+DURATION = 30  # segundos
+N_SAMPLES = SR * DURATION  # 661500
 BATCH_SIZE = 50
 
 files = sorted(audio_dir.glob("*/*.wav"))
@@ -32,39 +33,34 @@ labels = []
 paths = []
 batch_number = 0
 
+
 # Process audio into MFCC
 def preprocess_audio(audio):
-  audio = np.asarray(audio, dtype=np.float32)
+    audio = np.asarray(audio, dtype=np.float32)
 
-  if len(audio) > N_SAMPLES:
-    audio = audio[:N_SAMPLES]
-  else:
-    audio = np.pad(audio, (0, N_SAMPLES - len(audio)))
+    if len(audio) > N_SAMPLES:
+        audio = audio[:N_SAMPLES]
+    else:
+        audio = np.pad(audio, (0, N_SAMPLES - len(audio)))
 
-  return audio
+    return audio
 
-def extract_features(audio):
-  """Extract MFCCs and FFT magnitude from one audio file."""
-  mfcc = librosa.feature.mfcc(
-    y=audio,
-    sr=SR,
-    n_fft=N_FFT,
-    hop_length=HOP_LENGTH,
-    n_mfcc=N_MFCC
-  ).astype(np.float32)
 
-  # STFT: complex frequency coefficients over time
-  stft = librosa.stft(
-    y=audio,
-    n_fft=N_FFT,
-    hop_length=HOP_LENGTH
-  )
+def extract_features(audio, sr=SR):
+    """Extract MFCCs and FFT magnitude from one audio file."""
+    mfcc = librosa.feature.mfcc(
+        y=audio, sr=sr, n_fft=N_FFT, hop_length=HOP_LENGTH, n_mfcc=N_MFCC
+    ).astype(np.float32)
 
-  # Magnitude spectrum: shape (N_FFT // 2 + 1, number_of_frames)
-  fft_magnitude = np.abs(stft).astype(np.float32)
+    # STFT: complex frequency coefficients over time
+    stft = librosa.stft(y=audio, n_fft=N_FFT, hop_length=HOP_LENGTH)
 
-  return mfcc, fft_magnitude
-  
+    # Magnitude spectrum: shape (N_FFT // 2 + 1, number_of_frames)
+    fft_magnitude = np.abs(stft).astype(np.float32)
+
+    return mfcc, fft_magnitude
+
+
 # Save batch to folder
 def save_batch():
     global batch_number
@@ -79,7 +75,7 @@ def save_batch():
         mfcc=np.stack(mfcc_features),
         fft=np.stack(fft_features),
         genre=np.asarray(labels),
-        paths=np.asarray(paths)
+        paths=np.asarray(paths),
     )
 
     print(f"Saved {output_path.name}: {len(mfcc_features)} songs")
@@ -90,38 +86,35 @@ def save_batch():
     paths.clear()
     batch_number += 1
 
+
 # Use batches to load and save data
 def main():
-  for i, file_path in enumerate(files, start=1):
-      try:
-          # Load only one audio file into memory
-          audio, _ = librosa.load(
-              file_path,
-              sr=SR,
-              mono=True,
-              duration=DURATION
-          )
+    for i, file_path in enumerate(files, start=1):
+        try:
+            # Load only one audio file into memory
+            audio, _ = librosa.load(file_path, sr=SR, mono=True, duration=DURATION)
 
-          audio = preprocess_audio(audio)
-          mfcc, fft = extract_features(audio)
+            audio = preprocess_audio(audio)
+            mfcc, fft = extract_features(audio)
 
-          mfcc_features.append(mfcc)
-          fft_features.append(fft)
-          labels.append(file_path.parent.name)
-          paths.append(str(file_path.relative_to(audio_dir)))
+            mfcc_features.append(mfcc)
+            fft_features.append(fft)
+            labels.append(file_path.parent.name)
+            paths.append(str(file_path.relative_to(audio_dir)))
 
-          del audio, mfcc, fft
+            del audio, mfcc, fft
 
-          if len(mfcc_features) >= BATCH_SIZE:
-              save_batch()
+            if len(mfcc_features) >= BATCH_SIZE:
+                save_batch()
 
-      except Exception as e:
-          print(f"Skipping corrupted file: {file_path} ({e})")
+        except Exception as e:
+            print(f"Skipping corrupted file: {file_path} ({e})")
 
-  # Save the final batch, even if it contains fewer than 25 songs
-  save_batch()
+    # Save the final batch, even if it contains fewer than 25 songs
+    save_batch()
 
-  print("Processing complete.")
+    print("Processing complete.")
+
 
 if __name__ == "__main__":
-  main()
+    main()

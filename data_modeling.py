@@ -1,3 +1,5 @@
+import os
+import shutil
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -30,6 +32,40 @@ files_val, files_test = train_test_split(
     random_state=42,
 )
 
+# 1. Crear la carpeta /test si no existe
+if os.path.exists("test"):
+    shutil.rmtree("test")
+os.makedirs("./test", exist_ok=True)
+
+GENRES = [
+    "blues",
+    "classical",
+    "country",
+    "disco",
+    "hiphop",
+    "jazz",
+    "metal",
+    "pop",
+    "reggae",
+    "rock",
+]
+
+generos_guardados = set()
+
+for file_path in files_test:
+    with np.load(file_path) as batch:
+        for mfcc, genre in zip(batch["mfcc"], batch["genre"]):
+            genre_name = (
+                genre.decode("utf-8") if isinstance(genre, bytes) else str(genre)
+            )
+
+            if genre_name in GENRES and genre_name not in generos_guardados:
+                np.savez(f"test/{genre_name}.npz", mfcc=mfcc, genre=genre_name)
+                generos_guardados.add(genre_name)
+
+    if len(generos_guardados) == len(GENRES):
+        break
+
 # Genre enconding and normalization
 count = 0
 s = None
@@ -48,7 +84,10 @@ for f in files:
     count += x.shape[0] * x.shape[2]
 
 label_encoder = LabelEncoder().fit(all_genres)
+print(label_encoder.classes_)
 NUM_CLASSES = len(label_encoder.classes_)
+
+raise ValueError("Stop")
 
 mean = s / count
 std = np.sqrt(np.maximum(s2 / count - mean**2, 1e-12))
