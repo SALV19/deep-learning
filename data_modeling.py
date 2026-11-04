@@ -87,7 +87,7 @@ label_encoder = LabelEncoder().fit(all_genres)
 print(label_encoder.classes_)
 NUM_CLASSES = len(label_encoder.classes_)
 
-raise ValueError("Stop")
+# raise ValueError("Stop")
 
 mean = s / count
 std = np.sqrt(np.maximum(s2 / count - mean**2, 1e-12))
